@@ -298,7 +298,13 @@ export default function Dashboard({ session }: { session: SessionUser }) {
           {Object.keys(grouped)
             .sort((a, b) => (a === "#" ? 1 : b === "#" ? -1 : a.localeCompare(b)))
             .map((letter) => (
-              <div key={letter} ref={(el) => (sectionRefs.current[letter] = el)} className="mb-5">
+              <div
+  key={letter}
+  ref={(el) => {
+    sectionRefs.current[letter] = el;
+  }}
+  className="mb-5"
+>
                 <div
                   className="text-sm font-semibold px-1 py-1.5 mb-1 sticky top-0 z-10"
                   style={{ color: brassDeep, background: paperDeep, fontFamily: "ui-serif, Georgia, serif" }}

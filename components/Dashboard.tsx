@@ -43,6 +43,14 @@ function cpfMask(v: string) {
 function cpfValid(v: string) {
   return v.replace(/\D/g, "").length === 11;
 }
+function ccMask(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 9);
+  if (d.length <= 1) return d;
+  const verificador = d.slice(-1);
+  const corpo = d.slice(0, -1);
+  const grupos = corpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${grupos}-${verificador}`;
+}
 function letterOf(nome: string) {
   const c = (nome || "").trim().charAt(0).toUpperCase();
   return ALPHABET.includes(c) ? c : "#";
@@ -89,17 +97,18 @@ export default function Dashboard({ session }: { session: SessionUser }) {
     setTimeout(() => setToast(null), 2600);
   }
 
-  const filtered = useMemo(() => {
-    if (!records) return [];
-    const q = query.trim().toLowerCase();
-    if (!q) return records;
-    return records.filter(
-      (r) =>
-        r.nome.toLowerCase().includes(q) ||
-        r.cpf.replace(/\D/g, "").includes(q.replace(/\D/g, "")) ||
-        r.agencia.includes(q)
-    );
-  }, [records, query]);
+ const filtered = useMemo(() => {
+  if (!records) return [];
+  const q = query.trim().toLowerCase();
+  if (!q) return records;
+  const qDigits = q.replace(/\D/g, "");
+  return records.filter((r) => {
+    const matchNome = r.nome.toLowerCase().includes(q);
+    const matchCpf = qDigits.length > 0 && r.cpf.replace(/\D/g, "").includes(qDigits);
+    const matchAgencia = r.agencia.toLowerCase().includes(q);
+    return matchNome || matchCpf || matchAgencia;
+  });
+}, [records, query]);
 
   const grouped = useMemo(() => {
     const sorted = [...filtered].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
@@ -403,9 +412,9 @@ export default function Dashboard({ session }: { session: SessionUser }) {
               <div>
                 <label className="block text-xs uppercase tracking-wide mb-1" style={{ color: slate }}>Conta corrente</label>
                 <input
-                  value={form.cc}
-                  onChange={(e) => setForm({ ...form, cc: e.target.value })}
-                  placeholder="000.000-0"
+  value={form.cc}
+  onChange={(e) => setForm({ ...form, cc: ccMask(e.target.value) })}
+  placeholder="204.118-5"
                   className="w-full px-3 py-2 rounded outline-none"
                   style={{ border: `1px solid ${line}`, background: "white", color: ink, fontFamily: "ui-monospace, monospace" }}
                 />

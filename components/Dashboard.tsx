@@ -51,6 +51,18 @@ function ccMask(v: string) {
   const grupos = corpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   return `${grupos}-${verificador}`;
 }
+function maskCpf(cpf: string) {
+  const d = cpf.replace(/\D/g, "");
+  if (d.length !== 11) return cpf;
+  return `${d.slice(0, 3)}.***.***-${d.slice(9, 11)}`;
+}
+function maskCC(cc: string) {
+  const d = cc.replace(/\D/g, "");
+  if (d.length < 2) return cc;
+  const verificador = d.slice(-1);
+  const corpo = d.slice(0, -1);
+  return `${corpo.slice(0, 3)}${corpo.length > 3 ? ".***" : ""}-${verificador}`;
+}
 function letterOf(nome: string) {
   const c = (nome || "").trim().charAt(0).toUpperCase();
   return ALPHABET.includes(c) ? c : "#";
@@ -342,10 +354,10 @@ export default function Dashboard({ session }: { session: SessionUser }) {
                       className="grid sm:grid-cols-[1.4fr_2fr_0.7fr_1fr_auto] grid-cols-1 gap-1 sm:gap-0 px-4 py-3 items-center text-sm"
                       style={{ borderBottom: i === grouped[letter].length - 1 ? "none" : `1px solid ${line}` }}
                     >
-                      <div style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", color: inkSoft }}>{r.cpf}</div>
+                      <div style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", color: inkSoft }}>{maskCpf(r.cpf)}</div>
                       <div style={{ color: ink, fontWeight: 500 }}>{r.nome}</div>
                       <div style={{ color: slate }}>{r.agencia}</div>
-                      <div style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", color: inkSoft }}>{r.cc}</div>
+                      <div style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", color: inkSoft }}>{maskCC(r.cc)}</div>
                       {isAdmin && (
                         <div className="flex gap-2 justify-start sm:justify-end mt-1 sm:mt-0">
                           <button onClick={() => openEdit(r)} className="p-1.5 rounded hover:bg-black/5">

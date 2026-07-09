@@ -82,7 +82,7 @@ export default function UsuariosClient() {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
-        <form onSubmit={handleSubmit} className="rounded-md p-6 mb-8" style={{ background: paper, border: `1px solid ${line}` }}>
+        <form onSubmit={handleSubmit} className="rounded-md p-6 mb-8" style={{ background: paper, border: `1px solid ${line}` }} autoComplete="off">
           <h2 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: ink }}>
             <UserPlus size={16} /> Novo usuário
           </h2>
@@ -104,6 +104,8 @@ export default function UsuariosClient() {
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
                 className="w-full px-3 py-2 rounded outline-none"
                 style={{ border: `1px solid ${line}`, background: "white", color: ink }}
+                autoComplete="off"
+                name="novo-usuario-login"
                 required
               />
             </div>
@@ -117,6 +119,7 @@ export default function UsuariosClient() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className="w-full px-3 py-2 rounded outline-none"
                 style={{ border: `1px solid ${line}`, background: "white", color: ink }}
+                autoComplete="new-password"
                 required
                 minLength={6}
               />

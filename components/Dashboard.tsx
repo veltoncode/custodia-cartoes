@@ -30,45 +30,15 @@ const line = "#D9D3C4";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-type Cartao = { id: string; cpf: string; nome: string; agencia: string; cc: string };
+type Cartao = { id: string; nome: string };
 type SessionUser = { nome: string; role: "admin" | "consulta" };
 
-function cpfMask(v: string) {
-  const d = v.replace(/\D/g, "").slice(0, 11);
-  return d
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-}
-function cpfValid(v: string) {
-  return v.replace(/\D/g, "").length === 11;
-}
-function ccMask(v: string) {
-  const d = v.replace(/\D/g, "").slice(0, 9);
-  if (d.length <= 1) return d;
-  const verificador = d.slice(-1);
-  const corpo = d.slice(0, -1);
-  const grupos = corpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `${grupos}-${verificador}`;
-}
-function maskCpf(cpf: string) {
-  const d = cpf.replace(/\D/g, "");
-  if (d.length !== 11) return cpf;
-  return `${d.slice(0, 3)}.***.***-${d.slice(9, 11)}`;
-}
-function maskCC(cc: string) {
-  const d = cc.replace(/\D/g, "");
-  if (d.length < 2) return cc;
-  const verificador = d.slice(-1);
-  const corpo = d.slice(0, -1);
-  return `${corpo.slice(0, 3)}${corpo.length > 3 ? ".***" : ""}-${verificador}`;
-}
 function letterOf(nome: string) {
   const c = (nome || "").trim().charAt(0).toUpperCase();
   return ALPHABET.includes(c) ? c : "#";
 }
 function emptyForm() {
-  return { id: null as string | null, cpf: "", nome: "", agencia: "91", cc: "" };
+  return { id: null as string | null, nome: "" };
 }
 
 export default function Dashboard({ session }: { session: SessionUser }) {
@@ -109,18 +79,12 @@ export default function Dashboard({ session }: { session: SessionUser }) {
     setTimeout(() => setToast(null), 2600);
   }
 
- const filtered = useMemo(() => {
-  if (!records) return [];
-  const q = query.trim().toLowerCase();
-  if (!q) return records;
-  const qDigits = q.replace(/\D/g, "");
-  return records.filter((r) => {
-    const matchNome = r.nome.toLowerCase().includes(q);
-    const matchCpf = qDigits.length > 0 && r.cpf.replace(/\D/g, "").includes(qDigits);
-    const matchAgencia = r.agencia.toLowerCase().includes(q);
-    return matchNome || matchCpf || matchAgencia;
-  });
-}, [records, query]);
+  const filtered = useMemo(() => {
+    if (!records) return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return records;
+    return records.filter((r) => r.nome.toLowerCase().includes(q));
+  }, [records, query]);
 
   const grouped = useMemo(() => {
     const sorted = [...filtered].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
@@ -155,9 +119,6 @@ export default function Dashboard({ session }: { session: SessionUser }) {
   async function submitForm(e: React.FormEvent) {
     e.preventDefault();
     if (!form.nome.trim()) return setFormError("Informe o nome completo.");
-    if (!cpfValid(form.cpf)) return setFormError("CPF inválido — confira os 11 dígitos.");
-    if (!form.agencia.trim()) return setFormError("Informe a agência.");
-    if (!form.cc.trim()) return setFormError("Informe a conta corrente.");
 
     try {
       const isEdit = !!form.id;
@@ -171,10 +132,10 @@ export default function Dashboard({ session }: { session: SessionUser }) {
 
       if (isEdit) {
         setRecords((prev) => (prev ?? []).map((r) => (r.id === data.id ? data : r)));
-        showToast("Cartão atualizado.");
+        showToast("Nome atualizado.");
       } else {
         setRecords((prev) => [...(prev ?? []), data]);
-        showToast("Cartão adicionado.");
+        showToast("Nome adicionado.");
       }
       setModalOpen(false);
     } catch {
@@ -191,7 +152,7 @@ export default function Dashboard({ session }: { session: SessionUser }) {
         return;
       }
       setRecords((prev) => (prev ?? []).filter((r) => r.id !== id));
-      showToast("Cartão removido.", "erro");
+      showToast("Nome removido.", "erro");
     } catch {
       showToast("Erro de conexão. Tente novamente.", "erro");
     } finally {
@@ -213,7 +174,7 @@ export default function Dashboard({ session }: { session: SessionUser }) {
                 Custódia de Cartões
               </div>
               <div className="text-xs uppercase tracking-widest" style={{ color: brass, letterSpacing: "0.14em" }}>
-                Agência 91
+                Consulta de Nomes
               </div>
             </div>
           </div>
@@ -251,13 +212,13 @@ export default function Dashboard({ session }: { session: SessionUser }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por nome, CPF ou agência..."
+            placeholder="Buscar por nome..."
             className="w-full pl-9 pr-3 py-2.5 rounded outline-none text-sm"
             style={{ border: `1px solid ${line}`, background: "white", color: ink }}
           />
         </div>
         <div className="text-xs" style={{ color: slate }}>
-          {filtered.length} {filtered.length === 1 ? "cartão" : "cartões"}
+          {filtered.length} {filtered.length === 1 ? "nome" : "nomes"}
         </div>
         {isAdmin && (
           <button
@@ -265,7 +226,7 @@ export default function Dashboard({ session }: { session: SessionUser }) {
             className="flex items-center gap-1.5 px-4 py-2.5 rounded text-sm font-medium"
             style={{ background: teal, color: "white" }}
           >
-            <Plus size={16} /> Novo cartão
+            <Plus size={16} /> Novo nome
           </button>
         )}
       </div>
@@ -306,11 +267,11 @@ export default function Dashboard({ session }: { session: SessionUser }) {
             <div className="py-16 text-center rounded" style={{ background: "white", border: `1px dashed ${line}` }}>
               <CreditCard size={28} className="mx-auto mb-3" color={slate} />
               <p className="text-sm" style={{ color: ink }}>
-                {query ? "Nenhum cartão encontrado para essa busca." : "Nenhum cartão cadastrado ainda."}
+                {query ? "Nenhum nome encontrado para essa busca." : "Nenhum nome cadastrado ainda."}
               </p>
               {isAdmin && !query && (
                 <button onClick={openNew} className="mt-3 text-sm underline" style={{ color: teal }}>
-                  Cadastrar o primeiro cartão
+                  Cadastrar o primeiro nome
                 </button>
               )}
             </div>
@@ -319,13 +280,7 @@ export default function Dashboard({ session }: { session: SessionUser }) {
           {Object.keys(grouped)
             .sort((a, b) => (a === "#" ? 1 : b === "#" ? -1 : a.localeCompare(b)))
             .map((letter) => (
-              <div
-  key={letter}
-  ref={(el) => {
-    sectionRefs.current[letter] = el;
-  }}
-  className="mb-5"
->
+              <div key={letter} ref={(el) => { sectionRefs.current[letter] = el; }} className="mb-5">
                 <div
                   className="text-sm font-semibold px-1 py-1.5 mb-1 sticky top-0 z-10"
                   style={{ color: brassDeep, background: paperDeep, fontFamily: "ui-serif, Georgia, serif" }}
@@ -334,36 +289,29 @@ export default function Dashboard({ session }: { session: SessionUser }) {
                 </div>
                 <div className="rounded overflow-hidden" style={{ border: `1px solid ${line}`, background: "white" }}>
                   <div
-                    className="hidden sm:grid text-[11px] uppercase tracking-wide px-4 py-2"
+                    className="flex items-center justify-between text-[11px] uppercase tracking-wide px-4 py-2"
                     style={{
-                      gridTemplateColumns: isAdmin ? "1.4fr 2fr 0.7fr 1fr auto" : "1.4fr 2fr 0.7fr 1fr",
                       color: slate,
                       background: "#FAF9F5",
                       borderBottom: `1px solid ${line}`,
                     }}
                   >
-                    <div>CPF</div>
-                    <div>Nome</div>
-                    <div>Agência</div>
-                    <div>C/C</div>
-                    {isAdmin && <div></div>}
+                    <div>Nome do Titular</div>
+                    {isAdmin && <div>Ações</div>}
                   </div>
                   {grouped[letter].map((r, i) => (
                     <div
                       key={r.id}
-                      className="grid sm:grid-cols-[1.4fr_2fr_0.7fr_1fr_auto] grid-cols-1 gap-1 sm:gap-0 px-4 py-3 items-center text-sm"
+                      className="flex items-center justify-between px-4 py-3 text-sm"
                       style={{ borderBottom: i === grouped[letter].length - 1 ? "none" : `1px solid ${line}` }}
                     >
-                      <div style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", color: inkSoft }}>{maskCpf(r.cpf)}</div>
                       <div style={{ color: ink, fontWeight: 500 }}>{r.nome}</div>
-                      <div style={{ color: slate }}>{r.agencia}</div>
-                      <div style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", color: inkSoft }}>{maskCC(r.cc)}</div>
                       {isAdmin && (
-                        <div className="flex gap-2 justify-start sm:justify-end mt-1 sm:mt-0">
-                          <button onClick={() => openEdit(r)} className="p-1.5 rounded hover:bg-black/5">
+                        <div className="flex gap-2 justify-end">
+                          <button onClick={() => openEdit(r)} title="Editar" className="p-1.5 rounded hover:bg-black/5">
                             <Pencil size={14} color={slate} />
                           </button>
-                          <button onClick={() => setConfirmDelete(r)} className="p-1.5 rounded hover:bg-black/5">
+                          <button onClick={() => setConfirmDelete(r)} title="Remover" className="p-1.5 rounded hover:bg-black/5">
                             <Trash2 size={14} color={rust} />
                           </button>
                         </div>
@@ -386,7 +334,7 @@ export default function Dashboard({ session }: { session: SessionUser }) {
           <form onClick={(e) => e.stopPropagation()} onSubmit={submitForm} className="w-full max-w-md rounded-md p-6" style={{ background: paper }}>
             <div className="flex items-center justify-between mb-4">
               <h2 style={{ fontFamily: "ui-serif, Georgia, serif", color: ink }} className="text-xl">
-                {form.id ? "Editar cartão" : "Novo cartão"}
+                {form.id ? "Editar nome" : "Novo nome"}
               </h2>
               <button type="button" onClick={() => setModalOpen(false)}>
                 <X size={18} color={slate} />
@@ -397,41 +345,11 @@ export default function Dashboard({ session }: { session: SessionUser }) {
             <input
               value={form.nome}
               onChange={(e) => setForm({ ...form, nome: e.target.value.toUpperCase() })}
-              className="w-full mb-3 px-3 py-2 rounded outline-none"
+              placeholder="Ex: BEATRIZ ALMEIDA COSTA"
+              className="w-full mb-4 px-3 py-2 rounded outline-none"
               style={{ border: `1px solid ${line}`, background: "white", color: ink }}
               autoFocus
             />
-
-            <label className="block text-xs uppercase tracking-wide mb-1" style={{ color: slate }}>CPF</label>
-            <input
-              value={form.cpf}
-              onChange={(e) => setForm({ ...form, cpf: cpfMask(e.target.value) })}
-              placeholder="000.000.000-00"
-              className="w-full mb-3 px-3 py-2 rounded outline-none"
-              style={{ border: `1px solid ${line}`, background: "white", color: ink, fontFamily: "ui-monospace, monospace" }}
-            />
-
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div>
-                <label className="block text-xs uppercase tracking-wide mb-1" style={{ color: slate }}>Agência</label>
-                <input
-                  value={form.agencia}
-                  onChange={(e) => setForm({ ...form, agencia: e.target.value })}
-                  className="w-full px-3 py-2 rounded outline-none"
-                  style={{ border: `1px solid ${line}`, background: "white", color: ink }}
-                />
-              </div>
-              <div>
-                <label className="block text-xs uppercase tracking-wide mb-1" style={{ color: slate }}>Conta corrente</label>
-                <input
-  value={form.cc}
-  onChange={(e) => setForm({ ...form, cc: ccMask(e.target.value) })}
-  placeholder="204.118-5"
-                  className="w-full px-3 py-2 rounded outline-none"
-                  style={{ border: `1px solid ${line}`, background: "white", color: ink, fontFamily: "ui-monospace, monospace" }}
-                />
-              </div>
-            </div>
 
             {formError && (
               <div className="text-sm mb-3 px-3 py-2 rounded" style={{ background: "#FBEAE8", color: rust }}>
@@ -440,7 +358,7 @@ export default function Dashboard({ session }: { session: SessionUser }) {
             )}
 
             <button type="submit" className="w-full py-2.5 rounded font-medium text-sm" style={{ background: ink, color: paper }}>
-              {form.id ? "Salvar alterações" : "Adicionar cartão"}
+              {form.id ? "Salvar alterações" : "Adicionar nome"}
             </button>
           </form>
         </div>
@@ -455,10 +373,10 @@ export default function Dashboard({ session }: { session: SessionUser }) {
         >
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-md p-6" style={{ background: paper }}>
             <h3 style={{ fontFamily: "ui-serif, Georgia, serif", color: ink }} className="text-lg mb-2">
-              Remover cartão?
+              Remover nome?
             </h3>
             <p className="text-sm mb-5" style={{ color: slate }}>
-              O cartão de <strong style={{ color: ink }}>{confirmDelete.nome}</strong> será removido da custódia. Essa ação não pode ser desfeita.
+              O registro de <strong style={{ color: ink }}>{confirmDelete.nome}</strong> será removido do sistema. Essa ação não pode ser desfeita.
             </p>
             <div className="flex gap-2">
               <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2 rounded text-sm" style={{ border: `1px solid ${line}`, color: ink }}>

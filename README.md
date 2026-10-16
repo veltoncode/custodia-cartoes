@@ -1,6 +1,6 @@
-# Custódia de Cartões
+# Custódia de Cartões — Consulta de Nomes
 
-App de controle de custódia de cartões bancários (Agência 91), com banco de dados real (Supabase/Postgres), autenticação por usuário e senha (NextAuth) e dois perfis de acesso: **Administrador** (cadastra/edita/exclui) e **Consulta** (somente visualiza).
+App de consulta de nomes para controle de custódia de cartões, em conformidade com a LGPD (armazena apenas nomes, sem CPF, agência ou conta corrente). Possui banco de dados real (Supabase/Postgres), autenticação por usuário e senha (NextAuth) e dois perfis de acesso: **Administrador** (cadastra/edita/exclui nomes) e **Consulta** (somente visualiza).
 
 ---
 
@@ -11,8 +11,8 @@ App de controle de custódia de cartões bancários (Agência 91), com banco de 
 3. Aguarde o projeto ser criado (leva ~2 minutos).
 4. No menu lateral, vá em **SQL Editor** → **New query**.
 5. Abra o arquivo [`supabase/schema.sql`](./supabase/schema.sql) deste projeto, copie todo o conteúdo, cole no editor e clique em **Run**.
-   - Isso cria as tabelas `usuarios` e `cartoes`, com segurança (RLS) habilitada.
-   - Já inclui 3 cartões de exemplo (pode apagar depois pelo próprio app).
+   - Isso cria as tabelas `usuarios` e `cartoes` (apenas com `id` e `nome`), com segurança (RLS) habilitada.
+   - Já inclui 3 nomes de exemplo (pode apagar depois pelo próprio app).
 6. Vá em **Project Settings → API**. Você vai precisar de dois valores:
    - **Project URL** → vira `NEXT_PUBLIC_SUPABASE_URL`
    - **service_role key** (em "Project API keys", clique para revelar) → vira `SUPABASE_SERVICE_ROLE_KEY`

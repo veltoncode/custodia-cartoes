@@ -54,7 +54,7 @@ export default function LoginPage() {
             Custódia de Cartões
           </h1>
           <p className="text-sm mt-2 tracking-widest uppercase" style={{ color: brass, letterSpacing: "0.18em" }}>
-            Agência 91 · Controle de Tesouraria
+            Controle de Tesouraria · Consulta de Nomes
           </p>
         </div>
 

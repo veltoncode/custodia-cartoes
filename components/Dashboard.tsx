@@ -15,7 +15,9 @@ import {
   CreditCard,
   Landmark,
   Users,
+  FileUp,
 } from "lucide-react";
+import ImportPdfModal from "./ImportPdfModal";
 
 const ink = "#16233D";
 const inkSoft = "#26385C";
@@ -48,6 +50,7 @@ export default function Dashboard({ session }: { session: SessionUser }) {
   const [query, setQuery] = useState("");
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [formError, setFormError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Cartao | null>(null);
@@ -221,13 +224,23 @@ export default function Dashboard({ session }: { session: SessionUser }) {
           {filtered.length} {filtered.length === 1 ? "nome" : "nomes"}
         </div>
         {isAdmin && (
-          <button
-            onClick={openNew}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded text-sm font-medium"
-            style={{ background: teal, color: "white" }}
-          >
-            <Plus size={16} /> Novo nome
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setImportModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded text-sm font-medium border transition hover:bg-black/5"
+              style={{ borderColor: line, color: ink, background: "white" }}
+              title="Importar relação de nomes via PDF ou texto"
+            >
+              <FileUp size={16} color={brassDeep} /> Importar PDF / Lista
+            </button>
+            <button
+              onClick={openNew}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded text-sm font-medium"
+              style={{ background: teal, color: "white" }}
+            >
+              <Plus size={16} /> Novo nome
+            </button>
+          </div>
         )}
       </div>
 
@@ -270,9 +283,19 @@ export default function Dashboard({ session }: { session: SessionUser }) {
                 {query ? "Nenhum nome encontrado para essa busca." : "Nenhum nome cadastrado ainda."}
               </p>
               {isAdmin && !query && (
-                <button onClick={openNew} className="mt-3 text-sm underline" style={{ color: teal }}>
-                  Cadastrar o primeiro nome
-                </button>
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <button onClick={openNew} className="text-sm underline" style={{ color: teal }}>
+                    Cadastrar o primeiro nome
+                  </button>
+                  <span style={{ color: slate }}>·</span>
+                  <button
+                    onClick={() => setImportModalOpen(true)}
+                    className="text-sm underline flex items-center gap-1"
+                    style={{ color: brassDeep }}
+                  >
+                    <FileUp size={14} /> Importar de PDF
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -399,6 +422,19 @@ export default function Dashboard({ session }: { session: SessionUser }) {
           {toast.msg}
         </div>
       )}
+
+      {/* Modal: Importação via PDF */}
+      <ImportPdfModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        nomesCadastradosExistentes={(records ?? []).map((r) => r.nome)}
+        onSuccess={(novos) => {
+          setRecords((prev) => [...(prev ?? []), ...novos]);
+          showToast(
+            `${novos.length} ${novos.length === 1 ? "nome importado" : "nomes importados"} com sucesso!`
+          );
+        }}
+      />
     </div>
   );
 }
